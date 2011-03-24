@@ -182,19 +182,16 @@ module ActsAsTaggableOn::Taggable
         scope = base_tags.where(opts)
 
         if ActsAsTaggableOn::Tag.using_postgresql?
-          group_columns = grouped_column_names_for(ActsAsTaggableOn::Tag)
-          scope = scope.order("max(#{tagging_table_name}.created_at)").group(group_columns)
+          scope.order("max(#{tagging_table_name}.created_at)").group(grouped_column_names_for(ActsAsTaggableOn::Tag))
         else
-          scope = scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
-        end
-
-        scope.all
+          scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
+        end.all
       end
 
       ##
       # Returns all tags that are not owned of a given context
       def tags_on(context)
-        base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s]).all
+        base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
       end
 
       def set_tag_list_on(context, new_list)
@@ -232,7 +229,7 @@ module ActsAsTaggableOn::Taggable
 
           # Find taggings to remove:
           old_taggings = taggings.where(:tagger_type => nil, :tagger_id => nil,
-                                        :context => context.to_s, :tag_id => old_tags).all
+                                        :context => context.to_s, :tag_id => old_tags)
 
           if old_taggings.present?
             # Destroy old taggings:

@@ -30,12 +30,12 @@ module ActsAsTaggableOn::Taggable
 
     module InstanceMethods
       def owner_tags_on(owner, context)
-        if owner.nil?
-          base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ?), context.to_s]).all
-        else
+        if owner
           base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND
                              #{ActsAsTaggableOn::Tagging.table_name}.tagger_id = ? AND
-                             #{ActsAsTaggableOn::Tagging.table_name}.tagger_type = ?), context.to_s, owner.id, owner.class.to_s]).all
+                             #{ActsAsTaggableOn::Tagging.table_name}.tagger_type = ?), context.to_s, owner.id, owner.class.to_s])
+        else
+          base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ?), context.to_s])
         end
       end
 
@@ -84,7 +84,7 @@ module ActsAsTaggableOn::Taggable
             # have the correct context, and are removed from the list.
             old_taggings = ActsAsTaggableOn::Tagging.where(:taggable_id => id, :taggable_type => self.class.base_class.to_s,
                                                            :tagger_type => owner.class.to_s, :tagger_id => owner.id,
-                                                           :tag_id => old_tags, :context => context).all
+                                                           :tag_id => old_tags, :context => context)
 
             if old_taggings.present?
               # Destroy old taggings:
