@@ -33,8 +33,6 @@ Gem::Specification.new do |s|
     "lib/acts_as_taggable_on/acts_as_taggable_on/ownership.rb",
     "lib/acts_as_taggable_on/acts_as_taggable_on/related.rb",
     "lib/acts_as_taggable_on/acts_as_tagger.rb",
-    "lib/acts_as_taggable_on/compatibility/Gemfile",
-    "lib/acts_as_taggable_on/compatibility/active_record_backports.rb",
     "lib/acts_as_taggable_on/tag.rb",
     "lib/acts_as_taggable_on/tag_list.rb",
     "lib/acts_as_taggable_on/tagging.rb",

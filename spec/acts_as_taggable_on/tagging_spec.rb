@@ -13,11 +13,7 @@ describe ActsAsTaggableOn::Tagging do
 
     @tagging.should_not be_valid
     
-    if ActiveRecord::VERSION::MAJOR >= 3
-      @tagging.errors[:tag_id].should == ["can't be blank"]
-    else
-      @tagging.errors[:tag_id].should == "can't be blank"
-    end
+    @tagging.errors[:tag_id].should == ["can't be blank"]
   end
 
   it "should not create duplicate taggings" do

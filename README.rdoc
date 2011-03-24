@@ -15,23 +15,12 @@ was used.
 
 == Installation
 
-=== Rails 2.3.x
-
-Acts As Taggable On is tested to work in Rails 2.3.5. 
-
 ==== Plugin
 
 Acts As Taggable On is available both as a gem and as a traditional plugin. For the
 traditional plugin you can install like so:
 
   script/plugin install git://github.com/mbleigh/acts-as-taggable-on.git
-
-Acts As Taggable On is also available as a gem plugin using Rails 2.1's gem dependencies.
-To install the gem, add this to your config/environment.rb:
-  
-  config.gem "acts-as-taggable-on", :source => "http://gemcutter.org", :version => '2.0.0.rc1'
-  
-After that, you can run "rake gems:install" to install the gem if you don't already have it.
 
 ==== Post Installation
 
@@ -58,10 +47,6 @@ Acts As Taggable On uses RSpec for its test coverage. Inside the plugin
 directory, you can run the specs for RoR 3.0.0 with:
 
   rake spec
-
-If you want to test the plugin for Rails 2.3.x, use:
-
-  rake rails2.3:spec
 
 If you already have RSpec on your application, the specs will run while using:
 

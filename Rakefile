@@ -34,14 +34,6 @@ rescue LoadError
   puts "Rspec not available. Install it with: gem install rspec"  
 end
 
-namespace 'rails2.3' do
-  task :spec do
-    gemfile = File.join(File.dirname(__FILE__), 'lib', 'acts_as_taggable_on', 'compatibility', 'Gemfile')
-    ENV['BUNDLE_GEMFILE'] = gemfile
-    Rake::Task['spec'].invoke    
-  end
-end
-
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gemspec|
