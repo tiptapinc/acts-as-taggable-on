@@ -59,7 +59,7 @@ describe "acts_as_tagger" do
       it "should show all the tag list when both public and owned tags exist" do
         @taggable.tag_list = 'ruby, python'
         @tagger.tag(@taggable, :with => 'java, lisp', :on => :tags)
-        @taggable.all_tags_on(:tags).map(&:name).sort.should == %w(ruby python java lisp).sort
+        @taggable.all_tags_on(:tags).names.sort.should == %w(ruby python java lisp).sort
       end
       
       it "should not add owned tags to the common list" do

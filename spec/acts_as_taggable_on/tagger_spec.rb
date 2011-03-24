@@ -26,14 +26,14 @@ describe "Tagger" do
 
     [@user, @user2, @taggable].each(&:reload)
 
-    @user.owned_tags.map(&:name).sort.should == %w(ruby scheme).sort
-    @user2.owned_tags.map(&:name).sort.should == %w(java python lisp ruby).sort
+    @user.owned_tags.names.sort.should == %w(ruby scheme).sort
+    @user2.owned_tags.names.sort.should == %w(java python lisp ruby).sort
     
     @taggable.tags_from(@user).sort.should == %w(ruby scheme).sort
     @taggable.tags_from(@user2).sort.should == %w(java lisp python ruby).sort
     
     @taggable.all_tags_list.sort.should == %w(ruby scheme java python lisp).sort
-    @taggable.all_tags_on(:tags).size.should == 5
+    @taggable.all_tags_on(:tags).all.size.should == 5
   end
   
   it "should not lose tags from different taggers" do

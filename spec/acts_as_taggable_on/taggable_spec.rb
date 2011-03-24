@@ -304,9 +304,9 @@ describe "Taggable" do
       @inherited_different.tag_list = "fork, spoon"
       @inherited_different.save!
   
-      InheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').map(&:name).should == %w(bob kelso)
-      AlteredInheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').map(&:name).should == %w(fork spoon)
-      TaggableModel.tag_counts_on(:tags, :order => 'tags.id').map(&:name).should == %w(bob kelso fork spoon)
+      InheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').names.should == %w(bob kelso)
+      AlteredInheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').names.should == %w(fork spoon)
+      TaggableModel.tag_counts_on(:tags, :order => 'tags.id').names.should == %w(bob kelso fork spoon)
     end
   
     it 'should store same tag without validation conflict' do

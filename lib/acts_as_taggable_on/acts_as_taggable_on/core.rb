@@ -14,7 +14,7 @@ module ActsAsTaggableOn::Taggable
 
     module ClassMethods
       def initialize_acts_as_taggable_on_core
-        tag_types.map(&:to_s).each do |tags_type|
+        tag_types.each do |tags_type|
           tag_type         = tags_type.to_s.singularize
           context_taggings = "#{tag_type}_taggings".to_sym
           context_tags     = tags_type.to_sym
@@ -143,7 +143,8 @@ module ActsAsTaggableOn::Taggable
       end
 
       def add_custom_context(value)
-        custom_contexts << value.to_s unless custom_contexts.include?(value.to_s) or self.class.tag_types.map(&:to_s).include?(value.to_s)
+        value = value.to_s
+        custom_contexts << value unless tagging_contexts.include?(value)
       end
 
       def cached_tag_list_on(context)
@@ -157,7 +158,7 @@ module ActsAsTaggableOn::Taggable
 
       def tag_list_cache_on(context)
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context).map(&:name)))
+        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context).names))
       end
 
       def tag_list_on(context)
@@ -169,7 +170,7 @@ module ActsAsTaggableOn::Taggable
         variable_name = "@all_#{context.to_s.singularize}_list"
         return instance_variable_get(variable_name) if instance_variable_get(variable_name)
 
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context).map(&:name)).freeze)
+        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context).names).freeze)
       end
 
       ##
@@ -178,14 +179,13 @@ module ActsAsTaggableOn::Taggable
         tag_table_name = ActsAsTaggableOn::Tag.table_name
         tagging_table_name = ActsAsTaggableOn::Tagging.table_name
 
-        opts  =  ["#{tagging_table_name}.context = ?", context.to_s]
-        scope = base_tags.where(opts)
+        scope = base_tags.where(["#{tagging_table_name}.context = ?", context.to_s])
 
         if ActsAsTaggableOn::Tag.using_postgresql?
           scope.order("max(#{tagging_table_name}.created_at)").group(grouped_column_names_for(ActsAsTaggableOn::Tag))
         else
           scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
-        end.all
+        end
       end
 
       ##
@@ -202,7 +202,7 @@ module ActsAsTaggableOn::Taggable
       end
 
       def tagging_contexts
-        custom_contexts + self.class.tag_types.map(&:to_s)
+        custom_contexts + self.class.tag_types.map {|type| type.to_s }
       end
 
       def reload(*args)
@@ -233,7 +233,7 @@ module ActsAsTaggableOn::Taggable
 
           if old_taggings.present?
             # Destroy old taggings:
-            ActsAsTaggableOn::Tagging.destroy_all :id => old_taggings.map(&:id)
+            ActsAsTaggableOn::Tagging.destroy_all :id => old_taggings.map {|tagging| tagging.id }
           end
 
           # Create new taggings:

@@ -8,13 +8,14 @@ module ActsAsTaggableOn::Taggable
 
     module ClassMethods
       def initialize_acts_as_taggable_on_collection
-        tag_types.map(&:to_s).each do |tag_type|
+        tag_types.each do |tag_type|
+          singular_tag_type = tag_type.to_s.singularize
           class_eval %(
-            def self.#{tag_type.singularize}_counts(options={})
+            def self.#{singular_tag_type}_counts(options={})
               tag_counts_on('#{tag_type}', options)
             end
 
-            def #{tag_type.singularize}_counts(options = {})
+            def #{singular_tag_type}_counts(options = {})
               tag_counts_on('#{tag_type}', options)
             end
 

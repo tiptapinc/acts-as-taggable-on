@@ -77,8 +77,8 @@ module ActsAsTaggableOn
 
     # Remove whitespace, duplicates, and blanks.
     def clean!
-      reject!(&:blank?)
-      map!(&:strip)
+      reject! {|name| name.blank? }
+      map! {|name| name.strip }
       uniq!
     end
 

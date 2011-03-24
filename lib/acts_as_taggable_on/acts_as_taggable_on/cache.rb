@@ -16,9 +16,9 @@ module ActsAsTaggableOn::Taggable
 
     module ClassMethods
       def initialize_acts_as_taggable_on_cache
-        tag_types.map(&:to_s).each do |tag_type|
+        tag_types.each do |tag_type|
           class_eval %(
-            def self.caching_#{tag_type.singularize}_list?
+            def self.caching_#{tag_type.to_s.singularize}_list?
               caching_tag_list_on?("#{tag_type}")
             end
           )
@@ -37,11 +37,12 @@ module ActsAsTaggableOn::Taggable
 
     module InstanceMethods
       def save_cached_tag_list
-        tag_types.map(&:to_s).each do |tag_type|
-          if self.class.send("caching_#{tag_type.singularize}_list?")
+        tag_types.each do |tag_type|
+          tag_type = tag_type.to_s.singularize
+          if self.class.send("caching_#{tag_type}_list?")
             if tag_list_cache_set_on(tag_type)
-              list = tag_list_cache_on(tag_type.singularize).to_a.flatten.compact.join(', ')
-              self["cached_#{tag_type.singularize}_list"] = list
+              list = tag_list_cache_on(tag_type).to_a.flatten.compact.join(', ')
+              self["cached_#{tag_type}_list"] = list
             end
           end
         end

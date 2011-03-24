@@ -45,6 +45,10 @@ module ActsAsTaggableOn
 
         existing_tags + created_tags
       end
+
+      def names
+        all.map {|tag| tag.name }
+      end
     end
 
     ### INSTANCE METHODS:

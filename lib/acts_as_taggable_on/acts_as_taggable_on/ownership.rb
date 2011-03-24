@@ -18,7 +18,7 @@ module ActsAsTaggableOn::Taggable
       end
 
       def initialize_acts_as_taggable_on_ownership
-        tag_types.map(&:to_s).each do |tag_type|
+        tag_types.each do |tag_type|
           class_eval %(
             def #{tag_type}_from(owner)
               owner_tag_list_on(owner, '#{tag_type}')
@@ -50,7 +50,7 @@ module ActsAsTaggableOn::Taggable
         cache = cached_owned_tag_list_on(context)
         cache.delete_if { |key, value| key.id == owner.id && key.class == owner.class }
 
-        cache[owner] ||= ActsAsTaggableOn::TagList.new(*owner_tags_on(owner, context).map(&:name))
+        cache[owner] ||= ActsAsTaggableOn::TagList.new(*owner_tags_on(owner, context).names)
       end
 
       def set_owner_tag_list_on(owner, context, new_list)
@@ -88,7 +88,7 @@ module ActsAsTaggableOn::Taggable
 
             if old_taggings.present?
               # Destroy old taggings:
-              ActsAsTaggableOn::Tagging.destroy_all(:id => old_taggings.map(&:id))
+              ActsAsTaggableOn::Tagging.destroy_all(:id => old_taggings.map {|tagging| tagging.id })
             end
 
             # Create new taggings:

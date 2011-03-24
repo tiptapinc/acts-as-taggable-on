@@ -25,7 +25,7 @@ module ActsAsTaggableOn
     #     acts_as_taggable_on :languages, :skills
     #   end
     def acts_as_taggable_on(*tag_types)
-      tag_types = tag_types.to_a.flatten.compact.map(&:to_sym)
+      tag_types = tag_types.to_a.flatten.compact.map {|type| type.to_sym }
 
       if taggable?
         write_inheritable_attribute(:tag_types, (self.tag_types + tag_types).uniq)
