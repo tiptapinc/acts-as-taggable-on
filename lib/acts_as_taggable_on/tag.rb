@@ -12,7 +12,7 @@ module ActsAsTaggableOn
     validates_uniqueness_of :name
 
     ### SCOPES:
-    
+
     def self.using_postgresql?
       connection.adapter_name == 'PostgreSQL'
     end
@@ -20,11 +20,11 @@ module ActsAsTaggableOn
     def self.named(name)
       where(["name #{like_operator} ?", name])
     end
-  
+
     def self.named_any(list)
       where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", tag.to_s]) }.join(" OR "))
     end
-  
+
     def self.named_like(name)
       where(["name #{like_operator} ?", "%#{name}%"])
     end
@@ -45,7 +45,7 @@ module ActsAsTaggableOn
       return [] if list.empty?
 
       existing_tags = Tag.named_any(list).all
-      new_tag_names = list.reject do |name| 
+      new_tag_names = list.reject do |name|
                         name = comparable_name(name)
                         existing_tags.any? { |tag| comparable_name(tag.name) == name }
                       end
@@ -73,7 +73,7 @@ module ActsAsTaggableOn
         def like_operator
           using_postgresql? ? 'ILIKE' : 'LIKE'
         end
-        
+
         def comparable_name(str)
           RUBY_VERSION >= "1.9" ? str.downcase : str.mb_chars.downcase
         end
