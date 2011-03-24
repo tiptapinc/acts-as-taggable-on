@@ -49,6 +49,11 @@ module ActsAsTaggableOn
       def names
         all.map {|tag| tag.name }
       end
+
+    private
+      def comparable_name(str)
+        RUBY_VERSION >= "1.9" ? str.downcase : str.mb_chars.downcase
+      end
     end
 
     ### INSTANCE METHODS:
@@ -63,13 +68,6 @@ module ActsAsTaggableOn
 
     def count
       read_attribute(:count).to_i
-    end
-
-    class << self
-      private
-        def comparable_name(str)
-          RUBY_VERSION >= "1.9" ? str.downcase : str.mb_chars.downcase
-        end
     end
   end
 end
