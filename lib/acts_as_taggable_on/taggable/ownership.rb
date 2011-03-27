@@ -50,7 +50,7 @@ module ActsAsTaggableOn::Taggable
         cache = cached_owned_tag_list_on(context)
         cache.delete_if { |key, value| key.id == owner.id && key.class == owner.class }
 
-        cache[owner] ||= ActsAsTaggableOn::TagList.new(*owner_tags_on(owner, context).names)
+        cache[owner] ||= ActsAsTaggableOn::Taggable::TagList.new(*owner_tags_on(owner, context).names)
       end
 
       def set_owner_tag_list_on(owner, context, new_list)
@@ -59,7 +59,7 @@ module ActsAsTaggableOn::Taggable
         cache = cached_owned_tag_list_on(context)
         cache.delete_if { |key, value| key.id == owner.id && key.class == owner.class }
 
-        cache[owner] = ActsAsTaggableOn::TagList.from(new_list)
+        cache[owner] = ActsAsTaggableOn::Taggable::TagList.from(new_list)
       end
 
       def reload(*args)

@@ -27,7 +27,7 @@ describe "Taggable" do
 
   it "should be able to create tags" do
     @taggable.skill_list = "ruby, rails, css"
-    @taggable.instance_variable_get("@skill_list").instance_of?(ActsAsTaggableOn::TagList).should be_true
+    @taggable.instance_variable_get("@skill_list").instance_of?(ActsAsTaggableOn::Taggable::TagList).should be_true
     
     lambda {
       @taggable.save

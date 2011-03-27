@@ -1,4 +1,4 @@
-module ActsAsTaggableOn
+module ActsAsTaggableOn::Taggable
   class TagList < Array
     cattr_accessor :delimiter
     self.delimiter = ','

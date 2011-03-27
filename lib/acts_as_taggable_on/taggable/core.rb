@@ -66,7 +66,7 @@ module ActsAsTaggableOn::Taggable
       #   User.tagged_with("awesome", "cool", :any => true)       # Users that are tagged with awesome or cool
       #   User.tagged_with("awesome", "cool", :match_all => true) # Users that are tagged with just awesome and cool
       def tagged_with(tags, options = {})
-        tag_list = ActsAsTaggableOn::TagList.from(tags)
+        tag_list = ActsAsTaggableOn::Taggable::TagList.from(tags)
 
         return {} if tag_list.empty?
 
@@ -158,7 +158,7 @@ module ActsAsTaggableOn::Taggable
 
       def tag_list_cache_on(context)
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context).names))
+        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::Taggable::TagList.new(tags_on(context).names))
       end
 
       def tag_list_on(context)
@@ -170,7 +170,7 @@ module ActsAsTaggableOn::Taggable
         variable_name = "@all_#{context.to_s.singularize}_list"
         return instance_variable_get(variable_name) if instance_variable_get(variable_name)
 
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context).names).freeze)
+        instance_variable_set(variable_name, ActsAsTaggableOn::Taggable::TagList.new(all_tags_on(context).names).freeze)
       end
 
       ##
@@ -198,7 +198,7 @@ module ActsAsTaggableOn::Taggable
         add_custom_context(context)
 
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.from(new_list))
+        instance_variable_set(variable_name, ActsAsTaggableOn::Taggable::TagList.from(new_list))
       end
 
       def tagging_contexts
