@@ -54,8 +54,6 @@ module ActsAsTaggableOn::Taggable
       def all_tag_counts(options = {})
         options.assert_valid_keys :start_at, :end_at, :conditions, :at_least, :at_most, :order, :limit, :on, :id
 
-        scope = {}
-
         ## Generate conditions:
         options[:conditions] = sanitize_sql(options[:conditions]) if options[:conditions]
 
@@ -68,7 +66,6 @@ module ActsAsTaggableOn::Taggable
 
         tagging_conditions = [
           taggable_conditions,
-          scope[:conditions],
           start_at_conditions,
           end_at_conditions
         ].compact.reverse
@@ -83,10 +80,6 @@ module ActsAsTaggableOn::Taggable
 
         tagging_joins = [
           taggable_join,
-          scope[:joins]
-        ].compact
-
-        tag_joins = [
         ].compact
 
         ## Generate scope:
@@ -97,7 +90,6 @@ module ActsAsTaggableOn::Taggable
         tagging_joins.each      { |join|      tagging_scope = tagging_scope.joins(join)      }
         tagging_conditions.each { |condition| tagging_scope = tagging_scope.where(condition) }
 
-        tag_joins.each          { |join|      tag_scope     = tag_scope.joins(join)          }
         tag_conditions.each     { |condition| tag_scope     = tag_scope.where(condition)     }
 
         # GROUP BY and HAVING clauses:
