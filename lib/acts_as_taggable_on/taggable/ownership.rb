@@ -31,11 +31,9 @@ module ActsAsTaggableOn::Taggable
     module InstanceMethods
       def owner_tags_on(owner, context)
         if owner
-          base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND
-                             #{ActsAsTaggableOn::Tagging.table_name}.tagger_id = ? AND
-                             #{ActsAsTaggableOn::Tagging.table_name}.tagger_type = ?), context.to_s, owner.id, owner.class.to_s])
+          base_tags.where(:taggings => {:context => context.to_s, :tagger_id => owner.id, :tagger_type => owner.class.to_s})
         else
-          base_tags.where([%(#{ActsAsTaggableOn::Tagging.table_name}.context = ?), context.to_s])
+          base_tags.where(:taggings => {:context => context.to_s})
         end
       end
 
