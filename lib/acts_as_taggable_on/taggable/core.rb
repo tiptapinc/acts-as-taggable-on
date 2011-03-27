@@ -42,7 +42,7 @@ module ActsAsTaggableOn::Taggable
       end
 
       def acts_as_taggable_on(*args)
-        super(*args)
+        super
         initialize_acts_as_taggable_on_core
       end
 
@@ -211,7 +211,7 @@ module ActsAsTaggableOn::Taggable
           instance_variable_set("@all_#{context.to_s.singularize}_list", nil)
         end
 
-        super(*args)
+        super
       end
 
       def save_tags

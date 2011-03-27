@@ -14,7 +14,7 @@ module ActsAsTaggableOn::Taggable
     module ClassMethods
       def acts_as_taggable_on(*args)
         initialize_acts_as_taggable_on_ownership
-        super(*args)
+        super
       end
 
       def initialize_acts_as_taggable_on_ownership
@@ -67,7 +67,7 @@ module ActsAsTaggableOn::Taggable
           instance_variable_set("@owned_#{context}_list", nil)
         end
 
-        super(*args)
+        super
       end
 
       def save_owned_tags

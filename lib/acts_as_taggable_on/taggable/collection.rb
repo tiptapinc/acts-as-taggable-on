@@ -31,7 +31,7 @@ module ActsAsTaggableOn::Taggable
       end
 
       def acts_as_taggable_on(*args)
-        super(*args)
+        super
         initialize_acts_as_taggable_on_collection
       end
 
