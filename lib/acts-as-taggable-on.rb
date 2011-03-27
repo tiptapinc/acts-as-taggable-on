@@ -20,7 +20,7 @@ $LOAD_PATH.shift
 
 if defined?(ActiveRecord::Base)
   ActiveRecord::Base.extend ActsAsTaggableOn::Taggable
-  ActiveRecord::Base.send :include, ActsAsTaggableOn::Tagger
+  ActiveRecord::Base.extend ActsAsTaggableOn::Tagger
 end
 
 if defined?(ActionView::Base)

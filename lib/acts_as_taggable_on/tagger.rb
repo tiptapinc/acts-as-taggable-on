@@ -1,32 +1,26 @@
 module ActsAsTaggableOn
   module Tagger
-    def self.included(base)
-      base.extend ClassMethods
+    ##
+    # Make a model a tagger. This allows an instance of a model to claim ownership
+    # of tags.
+    #
+    # Example:
+    #   class User < ActiveRecord::Base
+    #     acts_as_tagger
+    #   end
+    def acts_as_tagger(opts={})
+      class_eval do
+        has_many :owned_taggings, opts.merge(:as => :tagger, :dependent => :destroy,
+                                             :include => :tag, :class_name => "ActsAsTaggableOn::Tagging")
+        has_many :owned_tags, :through => :owned_taggings, :source => :tag, :uniq => true, :class_name => "ActsAsTaggableOn::Tag"
+      end
+
+      include ActsAsTaggableOn::Tagger::InstanceMethods
+      extend ActsAsTaggableOn::Tagger::ClassMethods
     end
 
-    module ClassMethods
-      ##
-      # Make a model a tagger. This allows an instance of a model to claim ownership
-      # of tags.
-      #
-      # Example:
-      #   class User < ActiveRecord::Base
-      #     acts_as_tagger
-      #   end
-      def acts_as_tagger(opts={})
-        class_eval do
-          has_many :owned_taggings, opts.merge(:as => :tagger, :dependent => :destroy,
-                                               :include => :tag, :class_name => "ActsAsTaggableOn::Tagging")
-          has_many :owned_tags, :through => :owned_taggings, :source => :tag, :uniq => true, :class_name => "ActsAsTaggableOn::Tag"
-        end
-
-        include ActsAsTaggableOn::Tagger::InstanceMethods
-        extend ActsAsTaggableOn::Tagger::SingletonMethods
-      end
-
-      def is_tagger?
-        false
-      end
+    def is_tagger?
+      false
     end
 
     module InstanceMethods
@@ -58,7 +52,7 @@ module ActsAsTaggableOn
       end
     end
 
-    module SingletonMethods
+    module ClassMethods
       def is_tagger?
         true
       end
