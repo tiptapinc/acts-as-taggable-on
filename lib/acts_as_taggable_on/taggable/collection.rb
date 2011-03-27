@@ -72,12 +72,9 @@ module ActsAsTaggableOn::Taggable
         at_most   = sanitize_sql(['tags_count <= ?', options.delete(:at_most)]) if options[:at_most]
         having    = ["COUNT(#{ActsAsTaggableOn::Tagging.table_name}.tag_id) > 0", at_least, at_most].compact.join(' AND ')
 
-        group_columns = "#{ActsAsTaggableOn::Tagging.table_name}.tag_id"
-
         # Append the current scope to the scope, because we can't use scope(:find) in RoR 3.0 anymore:
-        scoped_select = "#{table_name}.#{primary_key}"
-        tagging_scope = tagging_scope.where("#{ActsAsTaggableOn::Tagging.table_name}.taggable_id IN(#{select(scoped_select).to_sql})").
-                                      group(group_columns).
+        tagging_scope = tagging_scope.where(:taggable_id => select("#{table_name}.#{primary_key}")).
+                                      group("#{ActsAsTaggableOn::Tagging.table_name}.tag_id").
                                       having(having)
 
         tag_scope = tag_scope.joins("JOIN (#{tagging_scope.to_sql}) AS taggings ON taggings.tag_id = tags.id")
