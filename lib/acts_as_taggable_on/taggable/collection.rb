@@ -54,43 +54,18 @@ module ActsAsTaggableOn::Taggable
       def all_tag_counts(options = {})
         options.assert_valid_keys :start_at, :end_at, :conditions, :at_least, :at_most, :order, :limit, :on, :id
 
-        ## Generate conditions:
-        options[:conditions] = sanitize_sql(options[:conditions]) if options[:conditions]
-
-        start_at_conditions = sanitize_sql(["#{ActsAsTaggableOn::Tagging.table_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
-        end_at_conditions   = sanitize_sql(["#{ActsAsTaggableOn::Tagging.table_name}.created_at <= ?", options.delete(:end_at)])   if options[:end_at]
-
-        taggable_conditions  = sanitize_sql(["#{ActsAsTaggableOn::Tagging.table_name}.taggable_type = ?", base_class.name])
-        taggable_conditions << sanitize_sql([" AND #{ActsAsTaggableOn::Tagging.table_name}.taggable_id = ?", options.delete(:id)])  if options[:id]
-        taggable_conditions << sanitize_sql([" AND #{ActsAsTaggableOn::Tagging.table_name}.context = ?", options.delete(:on).to_s]) if options[:on]
-
-        tagging_conditions = [
-          taggable_conditions,
-          start_at_conditions,
-          end_at_conditions
-        ].compact.reverse
-
-        tag_conditions = [
-          options[:conditions]
-        ].compact.reverse
-
-        ## Generate joins:
-        taggable_join = "INNER JOIN #{table_name} ON #{table_name}.#{primary_key} = #{ActsAsTaggableOn::Tagging.table_name}.taggable_id"
-        taggable_join << " AND #{table_name}.#{inheritance_column} = '#{name}'" unless descends_from_active_record? # Current model is STI descendant, so add type checking to the join condition
-
-        tagging_joins = [
-          taggable_join,
-        ].compact
-
         ## Generate scope:
-        tagging_scope = ActsAsTaggableOn::Tagging.select("#{ActsAsTaggableOn::Tagging.table_name}.tag_id, COUNT(#{ActsAsTaggableOn::Tagging.table_name}.tag_id) AS tags_count")
+        tagging_scope = ActsAsTaggableOn::Tagging.select("#{ActsAsTaggableOn::Tagging.table_name}.tag_id, COUNT(#{ActsAsTaggableOn::Tagging.table_name}.tag_id) AS tags_count").
+            joins("INNER JOIN #{table_name} ON #{table_name}.#{primary_key} = #{ActsAsTaggableOn::Tagging.table_name}.taggable_id").
+            where(:taggable_type => base_class.name)
+        tagging_scope = tagging_scope.where(table_name => {inheritance_column => name}) unless descends_from_active_record? # Current model is STI descendant, so add type checking to the join condition
+        tagging_scope = tagging_scope.where(:taggable_id => options.delete(:id)) if options[:id]
+        tagging_scope = tagging_scope.where(:context => options.delete(:on).to_s) if options[:on]
+        tagging_scope = tagging_scope.where(["#{ActsAsTaggableOn::Tagging.table_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
+        tagging_scope = tagging_scope.where(["#{ActsAsTaggableOn::Tagging.table_name}.created_at <= ?", options.delete(:end_at)]) if options[:end_at]
+
         tag_scope = ActsAsTaggableOn::Tag.select("#{ActsAsTaggableOn::Tag.table_name}.*, #{ActsAsTaggableOn::Tagging.table_name}.tags_count AS count").order(options[:order]).limit(options[:limit])
-
-        # Joins and conditions
-        tagging_joins.each      { |join|      tagging_scope = tagging_scope.joins(join)      }
-        tagging_conditions.each { |condition| tagging_scope = tagging_scope.where(condition) }
-
-        tag_conditions.each     { |condition| tag_scope     = tag_scope.where(condition)     }
+        tag_scope.where(options[:conditions]) if options[:conditions]
 
         # GROUP BY and HAVING clauses:
         at_least  = sanitize_sql(['tags_count >= ?', options.delete(:at_least)]) if options[:at_least]
