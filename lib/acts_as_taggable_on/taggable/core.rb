@@ -176,13 +176,10 @@ module ActsAsTaggableOn::Taggable
       ##
       # Returns all tags of a given context
       def all_tags_on(context)
-        tag_table_name = ActsAsTaggableOn::Tag.table_name
-        tagging_table_name = ActsAsTaggableOn::Tagging.table_name
-
-        scope = base_tags.where(["#{tagging_table_name}.context = ?", context.to_s])
+        scope = base_tags.where(:taggings => {:context => context.to_s})
 
         if ActsAsTaggableOn::Tag.using_postgresql?
-          scope.order("max(#{tagging_table_name}.created_at)").group(grouped_column_names_for(ActsAsTaggableOn::Tag))
+          scope.order("max(#{ActsAsTaggableOn::Tagging.table_name}.created_at)").group(grouped_column_names_for(ActsAsTaggableOn::Tag))
         else
           scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
         end
