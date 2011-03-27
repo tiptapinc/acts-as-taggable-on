@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael Bleigh"]
-  s.date = %q{2011-03-23}
+  s.date = %q{2011-03-26}
   s.description = %q{With ActsAsTaggableOn, you could tag a single model on several contexts, such as skills, interests, and awards. It also provides other advanced functionality.}
   s.email = %q{michael@intridea.com}
   s.extra_rdoc_files = [
@@ -26,15 +26,15 @@ Gem::Specification.new do |s|
     "generators/acts_as_taggable_on_migration/acts_as_taggable_on_migration_generator.rb",
     "generators/acts_as_taggable_on_migration/templates/migration.rb",
     "lib/acts-as-taggable-on.rb",
-    "lib/acts_as_taggable_on/acts_as_taggable_on.rb",
-    "lib/acts_as_taggable_on/acts_as_taggable_on/cache.rb",
-    "lib/acts_as_taggable_on/acts_as_taggable_on/collection.rb",
-    "lib/acts_as_taggable_on/acts_as_taggable_on/core.rb",
-    "lib/acts_as_taggable_on/acts_as_taggable_on/ownership.rb",
-    "lib/acts_as_taggable_on/acts_as_taggable_on/related.rb",
-    "lib/acts_as_taggable_on/acts_as_tagger.rb",
     "lib/acts_as_taggable_on/tag.rb",
     "lib/acts_as_taggable_on/tag_list.rb",
+    "lib/acts_as_taggable_on/taggable.rb",
+    "lib/acts_as_taggable_on/taggable/cache.rb",
+    "lib/acts_as_taggable_on/taggable/collection.rb",
+    "lib/acts_as_taggable_on/taggable/core.rb",
+    "lib/acts_as_taggable_on/taggable/ownership.rb",
+    "lib/acts_as_taggable_on/taggable/related.rb",
+    "lib/acts_as_taggable_on/tagger.rb",
     "lib/acts_as_taggable_on/tagging.rb",
     "lib/acts_as_taggable_on/tags_helper.rb",
     "lib/generators/acts_as_taggable_on/migration/migration_generator.rb",
