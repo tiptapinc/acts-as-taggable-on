@@ -16,14 +16,10 @@ module ActsAsTaggableOn
         validates_uniqueness_of :name
 
         ### SCOPES:
-        # Override this with 'ILIKE' for case-insensitive operation on postgres
-        cattr_accessor :like_operator
-        self.like_operator = 'LIKE'
-
-        scope :named, lambda {|name| where(["name #{like_operator} ?", name]) }
-        scope :named_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", tag.to_s]) }.join(" OR ")) }
-        scope :named_like, lambda {|name| where(["name #{like_operator} ?", "%#{name}%"]) }
-        scope :named_like_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", "%#{tag.to_s}%"]) }.join(" OR ")) }
+        scope :named, lambda {|name| where(["name #{ActsAsTaggableOn.like_operator} ?", name]) }
+        scope :named_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{ActsAsTaggableOn.like_operator} ?", tag.to_s]) }.join(" OR ")) }
+        scope :named_like, lambda {|name| where(["name #{ActsAsTaggableOn.like_operator} ?", "%#{name}%"]) }
+        scope :named_like_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{ActsAsTaggableOn.like_operator} ?", "%#{tag.to_s}%"]) }.join(" OR ")) }
       end
 
       include ActsAsTaggableOn::Tag::InstanceMethods

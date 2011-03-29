@@ -26,3 +26,10 @@ ActiveRecord::Base.extend ActsAsTaggableOn::Tagging
 if defined?(ActionView::Base)
   ActionView::Base.send :include, ActsAsTaggableOn::TagsHelper
 end
+
+module ActsAsTaggableOn
+  def like_operator
+    @like_operator ||= (ActiveRecord::Base.connection.adapter_name == 'PostgreSQL' ? 'ILIKE' : 'LIKE')
+  end
+  module_function :like_operator
+end
