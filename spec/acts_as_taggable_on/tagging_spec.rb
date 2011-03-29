@@ -2,7 +2,6 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe ActsAsTaggableOn::Tagging do
   before(:each) do
-    clean_database!
     @tagging = ActsAsTaggableOn::Tagging.new
   end
 

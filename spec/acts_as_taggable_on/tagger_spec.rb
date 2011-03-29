@@ -2,7 +2,6 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe "Tagger" do
   before(:each) do
-    clean_database!
     @user = TaggableUser.create
     @taggable = TaggableModel.create(:name => "Bob Jones")
   end

@@ -2,7 +2,6 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe ActsAsTaggableOn::Tag do
   before(:each) do
-    clean_database!
     @tag = ActsAsTaggableOn::Tag.new
     @user = TaggableModel.create(:name => "Pablo")
   end

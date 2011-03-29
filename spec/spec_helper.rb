@@ -49,12 +49,12 @@ ActiveRecord::Base.silence do
   load(File.dirname(__FILE__) + '/models.rb')
 end
 
-def clean_database!
-  models = [ActsAsTaggableOn::Tag, ActsAsTaggableOn::Tagging, TaggableModel, OtherTaggableModel, InheritingTaggableModel,
-            AlteredInheritingTaggableModel, TaggableUser, UntaggableModel]
-  models.each do |model|
-    ActiveRecord::Base.connection.execute "DELETE FROM #{model.table_name}"
+require 'database_cleaner'
+DatabaseCleaner.strategy = :truncation
+DatabaseCleaner.start
+
+RSpec.configure do |config|
+  config.after(:each) do
+    DatabaseCleaner.clean
   end
 end
-
-clean_database!
