@@ -33,6 +33,8 @@ module ActsAsTaggableOn
         write_inheritable_attribute(:tag_types, tag_types)
         class_inheritable_reader(:tag_types)
 
+        Tag.like_operator = 'ILIKE' if Tag.using_postgresql?
+
         class_eval do
           has_many :taggings, :as => :taggable, :dependent => :destroy, :include => :tag, :class_name => "ActsAsTaggableOn::Tagging"
           has_many :base_tags, :through => :taggings, :source => :tag, :class_name => "ActsAsTaggableOn::Tag"
