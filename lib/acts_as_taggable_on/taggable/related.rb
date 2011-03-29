@@ -38,25 +38,20 @@ module ActsAsTaggableOn::Taggable
 
     module InstanceMethods
       def matching_contexts_for(search_context, result_context, klass)
-        tags_to_find = tags_on(search_context).collect { |t| t.name }
-
-        exclude_self = "#{klass.table_name}.id != #{id} AND" if self.class == klass
-
-        klass.select("#{klass.table_name}.*, COUNT(#{ActsAsTaggableOn::Tag.table_name}.id) AS count").
-          from("#{klass.table_name}, #{ActsAsTaggableOn::Tag.table_name}, #{ActsAsTaggableOn::Tagging.table_name}").
-          where(["#{exclude_self} #{klass.table_name}.id = #{ActsAsTaggableOn::Tagging.table_name}.taggable_id AND #{ActsAsTaggableOn::Tagging.table_name}.taggable_type = '#{klass.to_s}' AND #{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id AND #{ActsAsTaggableOn::Tag.table_name}.name IN (?) AND #{ActsAsTaggableOn::Tagging.table_name}.context = ?", tags_to_find, result_context]).
-          group(grouped_column_names_for(klass)).
-          order("count DESC")
+        related_tags_for(search_context, klass).where("#{ActsAsTaggableOn::Tagging.table_name}.context = ?", result_context)
       end
 
       def related_tags_for(context, klass)
         tags_to_find = tags_on(context).collect { |t| t.name }
 
-        exclude_self = "#{klass.table_name}.id != #{id} AND" if self.class == klass
-
-        klass.select("#{klass.table_name}.*, COUNT(#{ActsAsTaggableOn::Tag.table_name}.id) AS count").
+        scope = klass.scoped
+        scope = scope.where("#{klass.table_name}.id != ?", id) if self.class == klass # exclude self
+        scope.select("#{klass.table_name}.*, COUNT(#{ActsAsTaggableOn::Tag.table_name}.id) AS count").
           from("#{klass.table_name}, #{ActsAsTaggableOn::Tag.table_name}, #{ActsAsTaggableOn::Tagging.table_name}").
-          where(["#{exclude_self} #{klass.table_name}.id = #{ActsAsTaggableOn::Tagging.table_name}.taggable_id AND #{ActsAsTaggableOn::Tagging.table_name}.taggable_type = '#{klass.to_s}' AND #{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id AND #{ActsAsTaggableOn::Tag.table_name}.name IN (?)", tags_to_find]).
+          where("#{klass.table_name}.id = #{ActsAsTaggableOn::Tagging.table_name}.taggable_id").
+          where("#{ActsAsTaggableOn::Tagging.table_name}.taggable_type = ?", klass.to_s).
+          where("#{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id").
+          where("#{ActsAsTaggableOn::Tag.table_name}.name IN (?)", tags_to_find).
           group(grouped_column_names_for(klass)).
           order("count DESC")
       end
