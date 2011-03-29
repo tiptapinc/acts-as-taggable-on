@@ -1,5 +1,5 @@
 require "active_record"
-require "action_view"
+require 'active_support/core_ext/class/attribute_accessors'
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
