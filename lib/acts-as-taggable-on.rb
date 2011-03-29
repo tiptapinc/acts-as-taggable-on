@@ -18,10 +18,8 @@ require "acts_as_taggable_on/tagging"
 
 $LOAD_PATH.shift
 
-if defined?(ActiveRecord::Base)
-  ActiveRecord::Base.extend ActsAsTaggableOn::Taggable
-  ActiveRecord::Base.extend ActsAsTaggableOn::Tagger
-end
+ActiveRecord::Base.extend ActsAsTaggableOn::Taggable
+ActiveRecord::Base.extend ActsAsTaggableOn::Tagger
 
 if defined?(ActionView::Base)
   ActionView::Base.send :include, ActsAsTaggableOn::TagsHelper
