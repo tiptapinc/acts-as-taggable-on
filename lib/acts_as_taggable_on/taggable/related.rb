@@ -38,7 +38,7 @@ module ActsAsTaggableOn::Taggable
 
     module InstanceMethods
       def matching_contexts_for(search_context, result_context, klass)
-        related_tags_for(search_context, klass).where("#{ActsAsTaggableOn::Tagging.table_name}.context = ?", result_context)
+        related_tags_for(search_context, klass).where("#{tagging_table_name}.context = ?", result_context)
       end
 
       def related_tags_for(context, klass)
@@ -46,12 +46,12 @@ module ActsAsTaggableOn::Taggable
 
         scope = klass.scoped
         scope = scope.where("#{klass.table_name}.id != ?", id) if self.class == klass # exclude self
-        scope.select("#{klass.table_name}.*, COUNT(#{ActsAsTaggableOn::Tag.table_name}.id) AS count").
-          from("#{klass.table_name}, #{ActsAsTaggableOn::Tag.table_name}, #{ActsAsTaggableOn::Tagging.table_name}").
-          where("#{klass.table_name}.id = #{ActsAsTaggableOn::Tagging.table_name}.taggable_id").
-          where("#{ActsAsTaggableOn::Tagging.table_name}.taggable_type = ?", klass.to_s).
-          where("#{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id").
-          where("#{ActsAsTaggableOn::Tag.table_name}.name IN (?)", tags_to_find).
+        scope.select("#{klass.table_name}.*, COUNT(#{tag_table_name}.id) AS count").
+          from("#{klass.table_name}, #{tag_table_name}, #{tagging_table_name}").
+          where("#{klass.table_name}.id = #{tagging_table_name}.taggable_id").
+          where("#{tagging_table_name}.taggable_type = ?", klass.to_s).
+          where("#{tagging_table_name}.tag_id = #{tag_table_name}.id").
+          where("#{tag_table_name}.name IN (?)", tags_to_find).
           group(grouped_column_names_for(klass)).
           order("count DESC")
       end
