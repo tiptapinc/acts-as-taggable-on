@@ -11,8 +11,8 @@ module ActsAsTaggableOn
     #   class Book < ActiveRecord::Base
     #     acts_as_taggable
     #   end
-    def acts_as_taggable
-      acts_as_taggable_on :tags
+    def acts_as_taggable(opts = {})
+      acts_as_taggable_on :tags, opts
     end
 
     ##
@@ -25,21 +25,30 @@ module ActsAsTaggableOn
     #     acts_as_taggable_on :languages, :skills
     #   end
     def acts_as_taggable_on(*tag_types)
+      opts = tag_types.extract_options!
+      opts.assert_valid_keys :tag, :tagging
+
       tag_types = tag_types.to_a.flatten.compact.map {|type| type.to_sym }
 
       if taggable?
         write_inheritable_attribute(:tag_types, (self.tag_types + tag_types).uniq)
       else
-        write_inheritable_attribute(:tag_types, tag_types)
-        write_inheritable_attribute(:tag_table_name, ActsAsTaggableOn::Tag.table_name)
-        write_inheritable_attribute(:tagging_table_name, ActsAsTaggableOn::Tagging.table_name)
-        class_inheritable_reader(:tag_types, :tag_table_name, :tagging_table_name)
+        opts.reverse_merge!(:tag => 'Tag', :tagging => 'Tagging')
+        tag_class_name = opts[:tag]
+        tagging_class_name = opts[:tagging]
+        tag = tag_class_name.constantize
+        tagging = tagging_class_name.constantize
 
-        Tag.like_operator = 'ILIKE' if Tag.using_postgresql?
+        write_inheritable_attribute(:tag_types, tag_types)
+        write_inheritable_attribute(:acts_as_taggable_on_tag_model, tag)
+        write_inheritable_attribute(:acts_as_taggable_on_tagging_model, tagging)
+        class_inheritable_reader(:tag_types, :acts_as_taggable_on_tagging_model, :acts_as_taggable_on_tag_model)
+
+        tag.like_operator = 'ILIKE' if tag.connection.adapter_name == 'PostgreSQL'
 
         class_eval do
-          has_many :taggings, :as => :taggable, :dependent => :destroy, :include => :tag, :class_name => "ActsAsTaggableOn::Tagging"
-          has_many :base_tags, :through => :taggings, :source => :tag, :class_name => "ActsAsTaggableOn::Tag"
+          has_many :taggings, :as => :taggable, :dependent => :destroy, :include => :tag, :class_name => tagging_class_name
+          has_many :base_tags, :through => :taggings, :source => :tag, :class_name => tag_class_name
 
           def self.taggable?
             true

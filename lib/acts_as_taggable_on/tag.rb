@@ -1,32 +1,36 @@
 module ActsAsTaggableOn
-  class Tag < ::ActiveRecord::Base
-    attr_accessible :name
+  module Tag
+    def acts_as_tag(opts = {})
+      opts.assert_valid_keys :tagging
+      tagging_class_name = opts[:tagging] || 'Tagging'
 
-    ### ASSOCIATIONS:
+      class_eval do
+        attr_accessible :name
 
-    has_many :taggings, :dependent => :destroy, :class_name => 'ActsAsTaggableOn::Tagging'
+        ### ASSOCIATIONS:
 
-    ### VALIDATIONS:
-    validates_presence_of :name
-    validates_uniqueness_of :name
+        has_many :taggings, :dependent => :destroy, :class_name => tagging_class_name
 
-    ### SCOPES:
-    # Override this with 'ILIKE' for case-insensitive operation on postgres
-    cattr_accessor :like_operator
-    self.like_operator = 'LIKE'
+        ### VALIDATIONS:
+        validates_presence_of :name
+        validates_uniqueness_of :name
 
-    scope :named, lambda {|name| where(["name #{like_operator} ?", name]) }
-    scope :named_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", tag.to_s]) }.join(" OR ")) }
-    scope :named_like, lambda {|name| where(["name #{like_operator} ?", "%#{name}%"]) }
-    scope :named_like_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", "%#{tag.to_s}%"]) }.join(" OR ")) }
+        ### SCOPES:
+        # Override this with 'ILIKE' for case-insensitive operation on postgres
+        cattr_accessor :like_operator
+        self.like_operator = 'LIKE'
 
-    ### CLASS METHODS:
-
-    class << self
-      def using_postgresql?
-        connection.adapter_name == 'PostgreSQL'
+        scope :named, lambda {|name| where(["name #{like_operator} ?", name]) }
+        scope :named_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", tag.to_s]) }.join(" OR ")) }
+        scope :named_like, lambda {|name| where(["name #{like_operator} ?", "%#{name}%"]) }
+        scope :named_like_any, lambda {|list| where(list.map { |tag| sanitize_sql(["name #{like_operator} ?", "%#{tag.to_s}%"]) }.join(" OR ")) }
       end
 
+      include ActsAsTaggableOn::Tag::InstanceMethods
+      extend ActsAsTaggableOn::Tag::ClassMethods
+    end
+
+    module ClassMethods
       def find_or_create_with_like_by_name(name)
         named_like(name).first || create(:name => name)
       end
@@ -35,12 +39,12 @@ module ActsAsTaggableOn
         list = list.flatten
         return [] if list.empty?
 
-        existing_tags = Tag.named_any(list)
+        existing_tags = named_any(list)
         new_tag_names = list.reject do |name|
                           name = comparable_name(name)
                           existing_tags.any? { |tag| comparable_name(tag.name) == name }
                         end
-        created_tags  = new_tag_names.map { |name| Tag.create(:name => name) }
+        created_tags  = new_tag_names.map { |name| create(:name => name) }
 
         existing_tags + created_tags
       end
@@ -55,18 +59,18 @@ module ActsAsTaggableOn
       end
     end
 
-    ### INSTANCE METHODS:
+    module InstanceMethods
+      def ==(object)
+        super || (object.is_a?(self.class) && name == object.name)
+      end
 
-    def ==(object)
-      super || (object.is_a?(Tag) && name == object.name)
-    end
+      def to_s
+        name
+      end
 
-    def to_s
-      name
-    end
-
-    def count
-      read_attribute(:count).to_i
+      def count
+        read_attribute(:count).to_i
+      end
     end
   end
 end

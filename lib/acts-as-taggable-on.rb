@@ -20,6 +20,8 @@ $LOAD_PATH.shift
 
 ActiveRecord::Base.extend ActsAsTaggableOn::Taggable
 ActiveRecord::Base.extend ActsAsTaggableOn::Tagger
+ActiveRecord::Base.extend ActsAsTaggableOn::Tag
+ActiveRecord::Base.extend ActsAsTaggableOn::Tagging
 
 if defined?(ActionView::Base)
   ActionView::Base.send :include, ActsAsTaggableOn::TagsHelper

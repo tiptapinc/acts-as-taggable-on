@@ -30,7 +30,7 @@ describe "Taggable" do
     
     lambda {
       @taggable.save
-    }.should change(ActsAsTaggableOn::Tag, :count).by(3)
+    }.should change(Tag, :count).by(3)
     
     @taggable.reload
     @taggable.skill_list.sort.should == %w(ruby rails css).sort
@@ -106,7 +106,7 @@ describe "Taggable" do
     bob = TaggableModel.create(:name => "Bob", :tag_list => "ruby")
     frank = TaggableModel.create(:name => "Frank", :tag_list => "Ruby")
 
-    ActsAsTaggableOn::Tag.find(:all).size.should == 1
+    Tag.find(:all).size.should == 1
     TaggableModel.tagged_with("ruby").to_a.should == TaggableModel.tagged_with("Ruby").to_a
   end
 
@@ -246,7 +246,7 @@ describe "Taggable" do
       bob.tag_list << "happier"
       bob.tag_list << "happier"
       bob.save
-    }.should change(ActsAsTaggableOn::Tagging, :count).by(1)
+    }.should change(Tagging, :count).by(1)
   end
  
   describe "Associations" do
@@ -262,10 +262,10 @@ describe "Taggable" do
   end
 
   describe "grouped_column_names_for method" do
-    if ActsAsTaggableOn::Tag.using_postgresql?
+    if ActiveRecord::Base.connection.adapter_name == 'PostgreSQL'
       context "on postgres" do
         it "should return all column names joined for Tag" do
-          @taggable.grouped_column_names_for(ActsAsTaggableOn::Tag).should == "tags.id, tags.name"
+          @taggable.grouped_column_names_for(Tag).should == "tags.id, tags.name"
         end
 
         it "should return all column names joined for TaggableModel" do
@@ -274,7 +274,7 @@ describe "Taggable" do
       end
     else
       it "should return the id column for Tag" do
-        @taggable.grouped_column_names_for(ActsAsTaggableOn::Tag).should == "tags.id"
+        @taggable.grouped_column_names_for(Tag).should == "tags.id"
       end
 
       it "should return the id column for TaggableModel" do

@@ -55,26 +55,26 @@ module ActsAsTaggableOn::Taggable
         options.assert_valid_keys :start_at, :end_at, :conditions, :at_least, :at_most, :order, :limit, :on, :id
 
         ## Generate scope:
-        tagging_scope = ActsAsTaggableOn::Tagging.select("#{tagging_table_name}.tag_id, COUNT(#{tagging_table_name}.tag_id) AS tags_count").
-            joins("INNER JOIN #{table_name} ON #{table_name}.#{primary_key} = #{tagging_table_name}.taggable_id").
+        tagging_scope = acts_as_taggable_on_tagging_model.select("#{acts_as_taggable_on_tagging_model.table_name}.tag_id, COUNT(#{acts_as_taggable_on_tagging_model.table_name}.tag_id) AS tags_count").
+            joins("INNER JOIN #{table_name} ON #{table_name}.#{primary_key} = #{acts_as_taggable_on_tagging_model.table_name}.taggable_id").
             where(:taggable_type => base_class.name)
         tagging_scope = tagging_scope.where(table_name => {inheritance_column => name}) unless descends_from_active_record? # Current model is STI descendant, so add type checking to the join condition
         tagging_scope = tagging_scope.where(:taggable_id => options.delete(:id)) if options[:id]
         tagging_scope = tagging_scope.where(:context => options.delete(:on).to_s) if options[:on]
-        tagging_scope = tagging_scope.where(["#{tagging_table_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
-        tagging_scope = tagging_scope.where(["#{tagging_table_name}.created_at <= ?", options.delete(:end_at)]) if options[:end_at]
+        tagging_scope = tagging_scope.where(["#{acts_as_taggable_on_tagging_model.table_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
+        tagging_scope = tagging_scope.where(["#{acts_as_taggable_on_tagging_model.table_name}.created_at <= ?", options.delete(:end_at)]) if options[:end_at]
 
-        tag_scope = ActsAsTaggableOn::Tag.select("#{tag_table_name}.*, #{tagging_table_name}.tags_count AS count").order(options[:order]).limit(options[:limit])
+        tag_scope = acts_as_taggable_on_tag_model.select("#{acts_as_taggable_on_tag_model.table_name}.*, #{acts_as_taggable_on_tagging_model.table_name}.tags_count AS count").order(options[:order]).limit(options[:limit])
         tag_scope.where(options[:conditions]) if options[:conditions]
 
         # GROUP BY and HAVING clauses:
         at_least  = sanitize_sql(['tags_count >= ?', options.delete(:at_least)]) if options[:at_least]
         at_most   = sanitize_sql(['tags_count <= ?', options.delete(:at_most)]) if options[:at_most]
-        having    = ["COUNT(#{tagging_table_name}.tag_id) > 0", at_least, at_most].compact.join(' AND ')
+        having    = ["COUNT(#{acts_as_taggable_on_tagging_model.table_name}.tag_id) > 0", at_least, at_most].compact.join(' AND ')
 
         # Append the current scope to the scope, because we can't use scope(:find) in RoR 3.0 anymore:
         tagging_scope = tagging_scope.where(:taggable_id => select("#{table_name}.#{primary_key}")).
-                                      group("#{tagging_table_name}.tag_id").
+                                      group("#{acts_as_taggable_on_tagging_model.table_name}.tag_id").
                                       having(having)
 
         tag_scope = tag_scope.joins("JOIN (#{tagging_scope.to_sql}) AS taggings ON taggings.tag_id = tags.id")

@@ -9,10 +9,14 @@ module ActsAsTaggableOn
     #     acts_as_tagger
     #   end
     def acts_as_tagger(opts={})
+      opts.assert_valid_keys :tagging, :tag
+      tagging_class_name = opts[:tagging] || 'Tagging'
+      tag_class_name = opts[:tag] || 'Tag'
+
       class_eval do
         has_many :owned_taggings, opts.merge(:as => :tagger, :dependent => :destroy,
-                                             :include => :tag, :class_name => "ActsAsTaggableOn::Tagging")
-        has_many :owned_tags, :through => :owned_taggings, :source => :tag, :uniq => true, :class_name => "ActsAsTaggableOn::Tag"
+                                             :include => :tag, :class_name => tagging_class_name)
+        has_many :owned_tags, :through => :owned_taggings, :source => :tag, :uniq => true, :class_name => tag_class_name
       end
 
       include ActsAsTaggableOn::Tagger::InstanceMethods
