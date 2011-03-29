@@ -48,7 +48,11 @@ module ActsAsTaggableOn::Taggable
 
       # all column names are necessary for PostgreSQL group clause
       def grouped_column_names_for(object)
-        object.column_names.map { |column| "#{object.table_name}.#{column}" }.join(", ")
+        if ActsAsTaggableOn::Tag.using_postgresql?
+          object.column_names.map { |column| "#{object.table_name}.#{column}" }.join(", ")
+        else
+          "#{object.table_name}.#{object.primary_key}"
+        end
       end
 
       ##
@@ -110,9 +114,7 @@ module ActsAsTaggableOn::Taggable
                    "  ON #{taggings_alias}.taggable_id = #{table_name}.#{primary_key}" +
                    " AND #{taggings_alias}.taggable_type = #{quote_value(base_class.name)}"
 
-
-          group_columns = ActsAsTaggableOn::Tag.using_postgresql? ? grouped_column_names_for(self) : "#{table_name}.#{primary_key}"
-          group = "#{group_columns} HAVING COUNT(#{taggings_alias}.taggable_id) = #{tags.size}"
+          group = "#{grouped_column_names_for(self)} HAVING COUNT(#{taggings_alias}.taggable_id) = #{tags.size}"
         end
 
 
@@ -176,13 +178,9 @@ module ActsAsTaggableOn::Taggable
       ##
       # Returns all tags of a given context
       def all_tags_on(context)
-        scope = base_tags.where(:taggings => {:context => context.to_s})
-
-        if ActsAsTaggableOn::Tag.using_postgresql?
-          scope.order("max(#{ActsAsTaggableOn::Tagging.table_name}.created_at)").group(grouped_column_names_for(ActsAsTaggableOn::Tag))
-        else
-          scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
-        end
+        base_tags.where(:taggings => {:context => context.to_s}).
+          group(grouped_column_names_for(ActsAsTaggableOn::Tag)).
+          order("max(#{ActsAsTaggableOn::Tagging.table_name}.created_at)")
       end
 
       ##
