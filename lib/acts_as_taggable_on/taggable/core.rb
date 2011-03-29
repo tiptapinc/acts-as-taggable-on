@@ -85,7 +85,7 @@ module ActsAsTaggableOn::Taggable
 
         else
           tags = ActsAsTaggableOn::Tag.named_any(tag_list)
-          return scoped(:conditions => "1 = 0") unless tags.length == tag_list.length
+          return where("1 = 0") unless tags.length == tag_list.length
 
           tags.each do |tag|
             safe_tag = tag.name.gsub(/[^a-zA-Z0-9]/, '')
@@ -116,11 +116,11 @@ module ActsAsTaggableOn::Taggable
         end
 
 
-        scoped(:joins      => joins.join(" "),
-               :group      => group,
-               :conditions => conditions.join(" AND "),
-               :order      => options[:order],
-               :readonly   => false)
+        where(conditions.join(" AND ")).
+          joins(joins.join(" ")).
+          group(group).
+          order(options[:order]).
+          readonly(false)
       end
 
       def is_taggable?

@@ -160,9 +160,9 @@ describe "Taggable" do
     
     # Test specific join syntaxes:
     frank.untaggable_models.create!
-    TaggableModel.tagged_with('rails').scoped(:joins => :untaggable_models).all_tag_counts.should have(2).items
-    TaggableModel.tagged_with('rails').scoped(:joins => { :untaggable_models => :taggable_model }).all_tag_counts.should have(2).items
-    TaggableModel.tagged_with('rails').scoped(:joins => [:untaggable_models]).all_tag_counts.should have(2).items
+    TaggableModel.tagged_with('rails').joins(:untaggable_models).all_tag_counts.should have(2).items
+    TaggableModel.tagged_with('rails').joins(:untaggable_models => :taggable_model).all_tag_counts.should have(2).items
+    TaggableModel.tagged_with('rails').joins([:untaggable_models]).all_tag_counts.should have(2).items
   end
 
   it "should be able to set a custom tag context list" do
