@@ -1,7 +1,9 @@
 module ActsAsTaggableOn::Taggable
   class TagList < Array
-    cattr_accessor :delimiter
+    cattr_accessor :delimiter, :force_lowercase, :force_parameterize
     self.delimiter = ','
+    self.force_lowercase = false
+    self.force_parameterize = false
 
     attr_accessor :owner
 
@@ -79,6 +81,8 @@ module ActsAsTaggableOn::Taggable
     def clean!
       reject! {|name| name.blank? }
       map! {|name| name.strip }
+      map! {|name| name.downcase } if force_lowercase
+      map! {|name| name.parameterize } if force_parameterize
       uniq!
     end
 
