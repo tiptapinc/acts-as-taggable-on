@@ -31,7 +31,7 @@ module ActsAsTaggableOn::Taggable
     module InstanceMethods
       def owner_tags_on(owner, context)
         if owner
-          base_tags.where(:taggings => {:context => context.to_s, :tagger_id => owner.id, :tagger_type => owner.class.to_s})
+          base_tags.where(:taggings => {:context => context.to_s, :tagger_id => owner.id, :tagger_type => owner.class.base_class.to_s})
         else
           base_tags.where(:taggings => {:context => context.to_s})
         end
@@ -82,7 +82,7 @@ module ActsAsTaggableOn::Taggable
             # have the correct context, and are removed from the list.
             old_taggings = acts_as_taggable_on_tagging_model.where(
               :taggable_id => id, :taggable_type => self.class.base_class.to_s,
-              :tagger_type => owner.class.to_s, :tagger_id => owner.id,
+              :tagger_type => owner.class.base_class.to_s, :tagger_id => owner.id,
               :tag_id => old_tags, :context => context)
 
             if old_taggings.present?
