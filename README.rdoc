@@ -203,4 +203,12 @@ CSS:
 * lawrencepit - cached tag work
 * sobrinho - fixed tag_cloud helper
 
+=== Incorporates Code From
+
+* Empact - compatibility, refactoring, rails extraction, more
+* kuldarkrabbi - inheritable attributes deprecation fix
+* revelation - STI fix
+* brady8 - force lowercase and parameterize tags
+* acook - integrated branches
+
 Copyright (c) 2007-2010 Michael Bleigh (http://mbleigh.com/) and Intridea Inc. (http://intridea.com/), released under the MIT license
