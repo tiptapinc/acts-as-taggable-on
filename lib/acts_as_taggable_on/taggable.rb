@@ -31,8 +31,7 @@ module ActsAsTaggableOn
       tag_types = tag_types.to_a.flatten.compact.map {|type| type.to_sym }
 
       if taggable?
-        class_attribute :tag_types
-        self.tag_types = (self.tag_types + tag_types).uniq
+        self.tag_types = (self.tag_types ? (self.tag_types + tag_types) : tag_types).uniq
       else
         opts.reverse_merge!(:tag => 'Tag', :tagging => 'Tagging')
         tag_class_name = opts[:tag]
