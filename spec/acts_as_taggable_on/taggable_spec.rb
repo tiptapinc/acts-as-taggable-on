@@ -2,7 +2,6 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe "Taggable" do
   before(:each) do
-    clean_database!
     @taggable = TaggableModel.new(:name => "Bob Jones")
     @taggables = [@taggable, TaggableModel.new(:name => "John Doe")]
   end
@@ -27,11 +26,11 @@ describe "Taggable" do
 
   it "should be able to create tags" do
     @taggable.skill_list = "ruby, rails, css"
-    @taggable.instance_variable_get("@skill_list").instance_of?(ActsAsTaggableOn::TagList).should be_true
+    @taggable.instance_variable_get("@skill_list").instance_of?(ActsAsTaggableOn::Taggable::TagList).should be_true
     
     lambda {
       @taggable.save
-    }.should change(ActsAsTaggableOn::Tag, :count).by(3)
+    }.should change(Tag, :count).by(3)
     
     @taggable.reload
     @taggable.skill_list.sort.should == %w(ruby rails css).sort
@@ -107,7 +106,7 @@ describe "Taggable" do
     bob = TaggableModel.create(:name => "Bob", :tag_list => "ruby")
     frank = TaggableModel.create(:name => "Frank", :tag_list => "Ruby")
 
-    ActsAsTaggableOn::Tag.find(:all).size.should == 1
+    Tag.find(:all).size.should == 1
     TaggableModel.tagged_with("ruby").to_a.should == TaggableModel.tagged_with("Ruby").to_a
   end
 
@@ -128,20 +127,9 @@ describe "Taggable" do
     TaggableModel.all_tag_counts(:order => 'tags.id').first.count.should == 3 # ruby
   end
 
-  if ActiveRecord::VERSION::MAJOR >= 3
-    it "should not return read-only records" do
-      TaggableModel.create(:name => "Bob", :tag_list => "ruby, rails, css")
-      TaggableModel.tagged_with("ruby").first.should_not be_readonly
-    end
-  else
-    xit "should not return read-only records" do
-      # apparantly, there is no way to set readonly to false in a scope if joins are made
-    end
-    
-    it "should be possible to return writable records" do
-      TaggableModel.create(:name => "Bob", :tag_list => "ruby, rails, css")
-      TaggableModel.tagged_with("ruby").first(:readonly => false).should_not be_readonly      
-    end
+  it "should not return read-only records" do
+    TaggableModel.create(:name => "Bob", :tag_list => "ruby, rails, css")
+    TaggableModel.tagged_with("ruby").first.should_not be_readonly
   end
 
   it "should be able to get scoped tag counts" do
@@ -171,9 +159,9 @@ describe "Taggable" do
     
     # Test specific join syntaxes:
     frank.untaggable_models.create!
-    TaggableModel.tagged_with('rails').scoped(:joins => :untaggable_models).all_tag_counts.should have(2).items
-    TaggableModel.tagged_with('rails').scoped(:joins => { :untaggable_models => :taggable_model }).all_tag_counts.should have(2).items
-    TaggableModel.tagged_with('rails').scoped(:joins => [:untaggable_models]).all_tag_counts.should have(2).items
+    TaggableModel.tagged_with('rails').joins(:untaggable_models).all_tag_counts.should have(2).items
+    TaggableModel.tagged_with('rails').joins(:untaggable_models => :taggable_model).all_tag_counts.should have(2).items
+    TaggableModel.tagged_with('rails').joins([:untaggable_models]).all_tag_counts.should have(2).items
   end
 
   it "should be able to set a custom tag context list" do
@@ -258,7 +246,7 @@ describe "Taggable" do
       bob.tag_list << "happier"
       bob.tag_list << "happier"
       bob.save
-    }.should change(ActsAsTaggableOn::Tagging, :count).by(1)
+    }.should change(Tagging, :count).by(1)
   end
  
   describe "Associations" do
@@ -274,12 +262,24 @@ describe "Taggable" do
   end
 
   describe "grouped_column_names_for method" do
-    it "should return all column names joined for Tag GROUP clause" do
-      @taggable.grouped_column_names_for(ActsAsTaggableOn::Tag).should == "tags.id, tags.name"
-    end
+    if ActiveRecord::Base.connection.adapter_name == 'PostgreSQL'
+      context "on postgres" do
+        it "should return all column names joined for Tag" do
+          @taggable.grouped_column_names_for(Tag).should == "tags.id, tags.name"
+        end
 
-    it "should return all column names joined for TaggableModel GROUP clause" do
-      @taggable.grouped_column_names_for(TaggableModel).should == "taggable_models.id, taggable_models.name, taggable_models.type"
+        it "should return all column names joined for TaggableModel" do
+          @taggable.grouped_column_names_for(TaggableModel).should == "taggable_models.id, taggable_models.name, taggable_models.type"
+        end
+      end
+    else
+      it "should return the id column for Tag" do
+        @taggable.grouped_column_names_for(Tag).should == "tags.id"
+      end
+
+      it "should return the id column for TaggableModel" do
+        @taggable.grouped_column_names_for(TaggableModel).should == "taggable_models.id"
+      end
     end
   end
 
@@ -315,9 +315,9 @@ describe "Taggable" do
       @inherited_different.tag_list = "fork, spoon"
       @inherited_different.save!
   
-      InheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').map(&:name).should == %w(bob kelso)
-      AlteredInheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').map(&:name).should == %w(fork spoon)
-      TaggableModel.tag_counts_on(:tags, :order => 'tags.id').map(&:name).should == %w(bob kelso fork spoon)
+      InheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').names.should == %w(bob kelso)
+      AlteredInheritingTaggableModel.tag_counts_on(:tags, :order => 'tags.id').names.should == %w(fork spoon)
+      TaggableModel.tag_counts_on(:tags, :order => 'tags.id').names.should == %w(bob kelso fork spoon)
     end
   
     it 'should store same tag without validation conflict' do

@@ -2,7 +2,6 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe "Tagger" do
   before(:each) do
-    clean_database!
     @user = TaggableUser.create
     @taggable = TaggableModel.create(:name => "Bob Jones")
   end
@@ -22,18 +21,18 @@ describe "Tagger" do
     lambda{
       @user.tag(@taggable, :with => 'ruby, scheme', :on => :tags)
       @user2.tag(@taggable, :with => 'java, python, lisp, ruby', :on => :tags)
-    }.should change(ActsAsTaggableOn::Tagging, :count).by(6)
+    }.should change(Tagging, :count).by(6)
 
     [@user, @user2, @taggable].each(&:reload)
 
-    @user.owned_tags.map(&:name).sort.should == %w(ruby scheme).sort
-    @user2.owned_tags.map(&:name).sort.should == %w(java python lisp ruby).sort
+    @user.owned_tags.names.sort.should == %w(ruby scheme).sort
+    @user2.owned_tags.names.sort.should == %w(java python lisp ruby).sort
     
     @taggable.tags_from(@user).sort.should == %w(ruby scheme).sort
     @taggable.tags_from(@user2).sort.should == %w(java lisp python ruby).sort
     
     @taggable.all_tags_list.sort.should == %w(ruby scheme java python lisp).sort
-    @taggable.all_tags_on(:tags).size.should == 5
+    @taggable.all_tags_on(:tags).all.size.should == 5
   end
   
   it "should not lose tags from different taggers" do
@@ -43,7 +42,7 @@ describe "Tagger" do
     
     lambda {
       @user2.tag(@taggable, :with => 'java, python, lisp', :on => :tags)
-    }.should change(ActsAsTaggableOn::Tagging, :count).by(-1)
+    }.should change(Tagging, :count).by(-1)
 
     [@user, @user2, @taggable].each(&:reload)
     
@@ -62,7 +61,7 @@ describe "Tagger" do
 
     lambda {
       @user2.tag(@taggable, :with => 'epic', :on => :tags)
-    }.should change(ActsAsTaggableOn::Tagging, :count).by(-1)
+    }.should change(Tagging, :count).by(-1)
 
     @taggable.reload  
     @taggable.all_tags_list.should include('awesome')
@@ -79,7 +78,7 @@ describe "Tagger" do
     
     lambda {
       @taggable.update_attributes(:tag_list => "")
-    }.should change(ActsAsTaggableOn::Tagging, :count).by(-1)
+    }.should change(Tagging, :count).by(-1)
     
     @taggable.tag_list.should == []
     @taggable.all_tags_list.sort.should == %w(ruby scheme).sort

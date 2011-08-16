@@ -1,8 +1,8 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
-describe ActsAsTaggableOn::TagList do
+describe ActsAsTaggableOn::Taggable::TagList do
   before(:each) do
-    @tag_list = ActsAsTaggableOn::TagList.new("awesome","radical")
+    @tag_list = ActsAsTaggableOn::Taggable::TagList.new("awesome","radical")
   end
   
   it "should be an array" do

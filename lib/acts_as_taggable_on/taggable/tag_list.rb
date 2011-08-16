@@ -1,14 +1,16 @@
-module ActsAsTaggableOn
+module ActsAsTaggableOn::Taggable
   class TagList < Array
-    cattr_accessor :delimiter
+    cattr_accessor :delimiter, :force_lowercase, :force_parameterize
     self.delimiter = ','
+    self.force_lowercase = false
+    self.force_parameterize = false
 
     attr_accessor :owner
 
     def initialize(*args)
       add(*args)
     end
-  
+
     ##
     # Returns a new TagList using the given tag string.
     #
@@ -74,11 +76,13 @@ module ActsAsTaggableOn
     end
 
     private
-  
+
     # Remove whitespace, duplicates, and blanks.
     def clean!
-      reject!(&:blank?)
-      map!(&:strip)
+      reject! {|name| name.blank? }
+      map! {|name| name.strip }
+      map! {|name| name.downcase } if force_lowercase
+      map! {|name| name.parameterize } if force_parameterize
       uniq!
     end
 

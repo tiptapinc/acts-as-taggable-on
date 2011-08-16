@@ -8,21 +8,21 @@ module ActsAsTaggableOn::Taggable
         attr_writer :custom_contexts
         after_save :save_tags
       end
-      
+
       base.initialize_acts_as_taggable_on_core
     end
-    
+
     module ClassMethods
       def initialize_acts_as_taggable_on_core
-        tag_types.map(&:to_s).each do |tags_type|
+        tag_types.each do |tags_type|
           tag_type         = tags_type.to_s.singularize
           context_taggings = "#{tag_type}_taggings".to_sym
           context_tags     = tags_type.to_sym
 
           class_eval do
-            has_many context_taggings, :as => :taggable, :dependent => :destroy, :include => :tag, :class_name => "ActsAsTaggableOn::Tagging",
-            :conditions => ["#{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id AND #{ActsAsTaggableOn::Tagging.table_name}.context = ?", tags_type]
-            has_many context_tags, :through => context_taggings, :source => :tag, :class_name => "ActsAsTaggableOn::Tag"
+            has_many context_taggings, :as => :taggable, :dependent => :destroy, :include => :tag, :class_name => acts_as_taggable_on_tagging_model.name,
+            :conditions => ["#{acts_as_taggable_on_tagging_model.table_name}.tag_id = #{acts_as_taggable_on_tag_model.table_name}.id AND #{acts_as_taggable_on_tagging_model.table_name}.context = ?", tags_type]
+            has_many context_tags, :through => context_taggings, :source => :tag, :class_name => acts_as_taggable_on_tag_model.name
           end
 
           class_eval %(
@@ -38,17 +38,21 @@ module ActsAsTaggableOn::Taggable
               all_tags_list_on('#{tags_type}')
             end
           )
-        end        
+        end
       end
-      
+
       def acts_as_taggable_on(*args)
-        super(*args)
+        super
         initialize_acts_as_taggable_on_core
       end
-      
+
       # all column names are necessary for PostgreSQL group clause
       def grouped_column_names_for(object)
-        object.column_names.map { |column| "#{object.table_name}.#{column}" }.join(", ")
+        if object.connection.adapter_name == 'PostgreSQL'
+          object.column_names.map { |column| "#{object.table_name}.#{column}" }.join(", ")
+        else
+          "#{object.table_name}.#{object.primary_key}"
+        end
       end
 
       ##
@@ -66,7 +70,7 @@ module ActsAsTaggableOn::Taggable
       #   User.tagged_with("awesome", "cool", :any => true)       # Users that are tagged with awesome or cool
       #   User.tagged_with("awesome", "cool", :match_all => true) # Users that are tagged with just awesome and cool
       def tagged_with(tags, options = {})
-        tag_list = ActsAsTaggableOn::TagList.from(tags)
+        tag_list = ActsAsTaggableOn::Taggable::TagList.from(tags)
 
         return {} if tag_list.empty?
 
@@ -76,11 +80,11 @@ module ActsAsTaggableOn::Taggable
         context = options.delete(:on)
 
         if options.delete(:exclude)
-          tags_conditions = tag_list.map { |t| sanitize_sql(["#{ActsAsTaggableOn::Tag.table_name}.name LIKE ?", t]) }.join(" OR ")
-          conditions << "#{table_name}.#{primary_key} NOT IN (SELECT #{ActsAsTaggableOn::Tagging.table_name}.taggable_id FROM #{ActsAsTaggableOn::Tagging.table_name} JOIN #{ActsAsTaggableOn::Tag.table_name} ON #{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id AND (#{tags_conditions}) WHERE #{ActsAsTaggableOn::Tagging.table_name}.taggable_type = #{quote_value(base_class.name)})"
+          tags_conditions = tag_list.map { |t| sanitize_sql(["#{acts_as_taggable_on_tag_model.table_name}.name #{ActsAsTaggableOn.like_operator} ?", t]) }.join(" OR ")
+          conditions << "#{table_name}.#{primary_key} NOT IN (SELECT #{acts_as_taggable_on_tagging_model.table_name}.taggable_id FROM #{acts_as_taggable_on_tagging_model.table_name} JOIN #{acts_as_taggable_on_tag_model.table_name} ON #{acts_as_taggable_on_tagging_model.table_name}.tag_id = #{acts_as_taggable_on_tag_model.table_name}.id AND (#{tags_conditions}) WHERE #{acts_as_taggable_on_tagging_model.table_name}.taggable_type = #{quote_value(base_class.name)})"
 
         elsif options.delete(:any)
-          conditions << tag_list.map { |t| sanitize_sql(["#{ActsAsTaggableOn::Tag.table_name}.name LIKE ?", t]) }.join(" OR ")
+          conditions << tag_list.map { |t| sanitize_sql(["#{acts_as_taggable_on_tag_model.table_name}.name #{ActsAsTaggableOn.like_operator} ?", t]) }.join(" OR ")
 
           tagging_join  = " JOIN #{ActsAsTaggableOn::Tagging.table_name}" +
                           "   ON #{ActsAsTaggableOn::Tagging.table_name}.taggable_id = #{table_name}.#{primary_key}" +
@@ -94,8 +98,8 @@ module ActsAsTaggableOn::Taggable
           joins << tagging_join
 
         else
-          tags = ActsAsTaggableOn::Tag.named_any(tag_list)
-          return scoped(:conditions => "1 = 0") unless tags.length == tag_list.length
+          tags = acts_as_taggable_on_tag_model.named_any(tag_list)
+          return where("1 = 0") unless tags.length == tag_list.length
 
           tags.each do |tag|
             safe_tag = tag.name.gsub(/[^a-zA-Z0-9]/, '')
@@ -103,7 +107,7 @@ module ActsAsTaggableOn::Taggable
 
             taggings_alias = "#{undecorated_table_name}_taggings_#{prefix}"
 
-            tagging_join  = "JOIN #{ActsAsTaggableOn::Tagging.table_name} #{taggings_alias}" +
+            tagging_join  = "JOIN #{acts_as_taggable_on_tagging_model.table_name} #{taggings_alias}" +
                             "  ON #{taggings_alias}.taggable_id = #{table_name}.#{primary_key}" +
                             " AND #{taggings_alias}.taggable_type = #{quote_value(base_class.name)}" +
                             " AND #{taggings_alias}.tag_id = #{tag.id}"
@@ -116,28 +120,26 @@ module ActsAsTaggableOn::Taggable
         taggings_alias, tags_alias = "#{undecorated_table_name}_taggings_group", "#{undecorated_table_name}_tags_group"
 
         if options.delete(:match_all)
-          joins << "LEFT OUTER JOIN #{ActsAsTaggableOn::Tagging.table_name} #{taggings_alias}" +
+          joins << "LEFT OUTER JOIN #{acts_as_taggable_on_tagging_model.table_name} #{taggings_alias}" +
                    "  ON #{taggings_alias}.taggable_id = #{table_name}.#{primary_key}" +
                    " AND #{taggings_alias}.taggable_type = #{quote_value(base_class.name)}"
 
-
-          group_columns = ActsAsTaggableOn::Tag.using_postgresql? ? grouped_column_names_for(self) : "#{table_name}.#{primary_key}"
-          group = "#{group_columns} HAVING COUNT(#{taggings_alias}.taggable_id) = #{tags.size}"
+          group = "#{grouped_column_names_for(self)} HAVING COUNT(#{taggings_alias}.taggable_id) = #{tags.size}"
         end
 
-        scoped(:select     => select_clause,
-               :joins      => joins.join(" "),
-               :group      => group,
-               :conditions => conditions.join(" AND "),
-               :order      => options[:order],
-               :readonly   => false)
+        where(conditions.join(" AND ")).
+          select(select_clause).
+          joins(joins.join(" ")).
+          group(group).
+          order(options[:order]).
+          readonly(false)
       end
 
       def is_taggable?
         true
       end
-    end    
-    
+    end
+
     module InstanceMethods
       # all column names are necessary for PostgreSQL group clause
       def grouped_column_names_for(object)
@@ -153,7 +155,8 @@ module ActsAsTaggableOn::Taggable
       end
 
       def add_custom_context(value)
-        custom_contexts << value.to_s unless custom_contexts.include?(value.to_s) or self.class.tag_types.map(&:to_s).include?(value.to_s)
+        value = value.to_s
+        custom_contexts << value unless tagging_contexts.include?(value)
       end
 
       def cached_tag_list_on(context)
@@ -167,7 +170,7 @@ module ActsAsTaggableOn::Taggable
 
       def tag_list_cache_on(context)
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(tags_on(context).map(&:name)))
+        instance_variable_get(variable_name) || instance_variable_set(variable_name, ActsAsTaggableOn::Taggable::TagList.new(tags_on(context).names))
       end
 
       def tag_list_on(context)
@@ -179,43 +182,32 @@ module ActsAsTaggableOn::Taggable
         variable_name = "@all_#{context.to_s.singularize}_list"
         return instance_variable_get(variable_name) if instance_variable_get(variable_name)
 
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.new(all_tags_on(context).map(&:name)).freeze)
+        instance_variable_set(variable_name, ActsAsTaggableOn::Taggable::TagList.new(all_tags_on(context).names).freeze)
       end
 
       ##
       # Returns all tags of a given context
       def all_tags_on(context)
-        tag_table_name = ActsAsTaggableOn::Tag.table_name
-        tagging_table_name = ActsAsTaggableOn::Tagging.table_name
-
-        opts  =  ["#{tagging_table_name}.context = ?", context.to_s]
-        scope = base_tags.where(opts)
-        
-        if ActsAsTaggableOn::Tag.using_postgresql?
-          group_columns = grouped_column_names_for(ActsAsTaggableOn::Tag)
-          scope = scope.order("max(#{tagging_table_name}.created_at)").group(group_columns)
-        else
-          scope = scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
-        end
-
-        scope.all
+        base_tags.where(:taggings => {:context => context.to_s}).
+          group(grouped_column_names_for(acts_as_taggable_on_tag_model)).
+          order("max(#{acts_as_taggable_on_tagging_model.table_name}.created_at)")
       end
 
       ##
       # Returns all tags that are not owned of a given context
       def tags_on(context)
-        base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s]).all
+        base_tags.where(["#{acts_as_taggable_on_tagging_model.table_name}.context = ? AND #{acts_as_taggable_on_tagging_model.table_name}.tagger_id IS NULL", context.to_s])
       end
 
       def set_tag_list_on(context, new_list)
         add_custom_context(context)
 
         variable_name = "@#{context.to_s.singularize}_list"
-        instance_variable_set(variable_name, ActsAsTaggableOn::TagList.from(new_list))
+        instance_variable_set(variable_name, ActsAsTaggableOn::Taggable::TagList.from(new_list))
       end
 
       def tagging_contexts
-        custom_contexts + self.class.tag_types.map(&:to_s)
+        custom_contexts + self.class.tag_types.map {|type| type.to_s }
       end
 
       def reload(*args)
@@ -223,8 +215,8 @@ module ActsAsTaggableOn::Taggable
           instance_variable_set("@#{context.to_s.singularize}_list", nil)
           instance_variable_set("@all_#{context.to_s.singularize}_list", nil)
         end
-      
-        super(*args)
+
+        super
       end
 
       def save_tags
@@ -234,19 +226,19 @@ module ActsAsTaggableOn::Taggable
           tag_list = tag_list_cache_on(context).uniq
 
           # Find existing tags or create non-existing tags:
-          tag_list = ActsAsTaggableOn::Tag.find_or_create_all_with_like_by_name(tag_list)
+          tag_list = acts_as_taggable_on_tag_model.find_or_create_all_with_like_by_name(tag_list)
 
           current_tags = tags_on(context)
           old_tags     = current_tags - tag_list
           new_tags     = tag_list     - current_tags
-          
+
           # Find taggings to remove:
           old_taggings = taggings.where(:tagger_type => nil, :tagger_id => nil,
-                                        :context => context.to_s, :tag_id => old_tags).all
+                                        :context => context.to_s, :tag_id => old_tags)
 
           if old_taggings.present?
             # Destroy old taggings:
-            ActsAsTaggableOn::Tagging.destroy_all :id => old_taggings.map(&:id)
+            acts_as_taggable_on_tagging_model.destroy_all :id => old_taggings.map {|tagging| tagging.id }
           end
 
           # Create new taggings:

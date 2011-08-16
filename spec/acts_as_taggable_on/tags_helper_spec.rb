@@ -2,8 +2,6 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe ActsAsTaggableOn::TagsHelper do
   before(:each) do
-    clean_database!
-    
     @bob = TaggableModel.create(:name => "Bob Jones",  :language_list => "ruby, php")
     @tom = TaggableModel.create(:name => "Tom Marley", :language_list => "ruby, java")
     @eve = TaggableModel.create(:name => "Eve Nodd",   :language_list => "ruby, c++")

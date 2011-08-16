@@ -1,3 +1,19 @@
+class Tag < ActiveRecord::Base
+  acts_as_tag
+end
+
+class TestTag < ActiveRecord::Base
+  acts_as_tag
+end
+
+class Tagging < ActiveRecord::Base
+  acts_as_tagging
+end
+
+class TestTagging < ActiveRecord::Base
+  acts_as_tagging :tag => 'TestTag'
+end
+
 class TaggableModel < ActiveRecord::Base
   acts_as_taggable
   acts_as_taggable_on :languages

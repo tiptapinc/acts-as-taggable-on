@@ -1,10 +1,6 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 describe "Acts As Taggable On" do
-  before(:each) do
-    clean_database!
-  end
-
   it "should provide a class method 'taggable?' that is false for untaggable models" do
     UntaggableModel.should_not be_taggable
   end
@@ -12,7 +8,7 @@ describe "Acts As Taggable On" do
   describe "Taggable Method Generation" do
     before(:each) do
       clean_database!
-      TaggableModel.write_inheritable_attribute(:tag_types, [])
+      TaggableModel.tag_types = []
       TaggableModel.acts_as_taggable_on(:tags, :languages, :skills, :needs, :offerings)
       @taggable = TaggableModel.new(:name => "Bob Jones")
     end

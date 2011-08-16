@@ -1,37 +1,35 @@
 module ActsAsTaggableOn
   module Tagger
-    def self.included(base)
-      base.extend ClassMethods
+    ##
+    # Make a model a tagger. This allows an instance of a model to claim ownership
+    # of tags.
+    #
+    # Example:
+    #   class User < ActiveRecord::Base
+    #     acts_as_tagger
+    #   end
+    def acts_as_tagger(opts={})
+      opts.assert_valid_keys :tagging, :tag
+      tagging_class_name = opts[:tagging] || 'Tagging'
+      tag_class_name = opts[:tag] || 'Tag'
+
+      class_eval do
+        has_many :owned_taggings, opts.merge(:as => :tagger, :dependent => :destroy,
+                                             :include => :tag, :class_name => tagging_class_name)
+        has_many :owned_tags, :through => :owned_taggings, :source => :tag, :uniq => true, :class_name => tag_class_name
+      end
+
+      include ActsAsTaggableOn::Tagger::InstanceMethods
+      extend ActsAsTaggableOn::Tagger::ClassMethods
     end
 
-    module ClassMethods
-      ##
-      # Make a model a tagger. This allows an instance of a model to claim ownership
-      # of tags.
-      #
-      # Example:
-      #   class User < ActiveRecord::Base
-      #     acts_as_tagger
-      #   end
-      def acts_as_tagger(opts={})
-        class_eval do
-          has_many :owned_taggings, opts.merge(:as => :tagger, :dependent => :destroy,
-                                               :include => :tag, :class_name => "ActsAsTaggableOn::Tagging")
-          has_many :owned_tags, :through => :owned_taggings, :source => :tag, :uniq => true, :class_name => "ActsAsTaggableOn::Tag"
-        end
-
-        include ActsAsTaggableOn::Tagger::InstanceMethods
-        extend ActsAsTaggableOn::Tagger::SingletonMethods
-      end
-
-      def is_tagger?
-        false
-      end
+    def is_tagger?
+      false
     end
 
     module InstanceMethods
       ##
-      # Tag a taggable model with tags that are owned by the tagger. 
+      # Tag a taggable model with tags that are owned by the tagger.
       #
       # @param taggable The object that will be tagged
       # @param [Hash] options An hash with options. Available options are:
@@ -58,7 +56,7 @@ module ActsAsTaggableOn
       end
     end
 
-    module SingletonMethods
+    module ClassMethods
       def is_tagger?
         true
       end

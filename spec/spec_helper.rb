@@ -32,29 +32,29 @@ end
 ENV['DB'] ||= 'sqlite3'
 
 database_yml = File.expand_path('../database.yml', __FILE__)
-if File.exists?(database_yml)
-  active_record_configuration = YAML.load_file(database_yml)[ENV['DB']]
-  
-  ActiveRecord::Base.establish_connection(active_record_configuration)
-  ActiveRecord::Base.logger = Logger.new(File.join(File.dirname(__FILE__), "debug.log"))
-  
-  ActiveRecord::Base.silence do
-    ActiveRecord::Migration.verbose = false
-    
-    load(File.dirname(__FILE__) + '/schema.rb')
-    load(File.dirname(__FILE__) + '/models.rb')
-  end  
-  
-else
+if !File.exists?(database_yml)
   raise "Please create #{database_yml} first to configure your database. Take a look at: #{database_yml}.sample"
 end
 
-def clean_database!
-  models = [ActsAsTaggableOn::Tag, ActsAsTaggableOn::Tagging, TaggableModel, OtherTaggableModel, InheritingTaggableModel,
-            AlteredInheritingTaggableModel, TaggableUser, UntaggableModel]
-  models.each do |model|
-    ActiveRecord::Base.connection.execute "DELETE FROM #{model.table_name}"
-  end
+active_record_configuration = YAML.load_file(database_yml)[ENV['DB']]
+
+require 'active_support/core_ext/logger'
+ActiveRecord::Base.establish_connection(active_record_configuration)
+ActiveRecord::Base.logger = Logger.new(File.join(File.dirname(__FILE__), "debug.log"))
+
+ActiveRecord::Base.silence do
+  ActiveRecord::Migration.verbose = false
+
+  load(File.dirname(__FILE__) + '/schema.rb')
+  load(File.dirname(__FILE__) + '/models.rb')
 end
 
-clean_database!
+require 'database_cleaner'
+DatabaseCleaner.strategy = :truncation
+DatabaseCleaner.start
+
+RSpec.configure do |config|
+  config.after(:each) do
+    DatabaseCleaner.clean
+  end
+end
