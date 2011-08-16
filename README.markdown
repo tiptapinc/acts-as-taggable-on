@@ -19,34 +19,14 @@ was used.
 Installation
 ============
 
-Rails 3.0
----------
+1. Add it to your Gemfile
+    `gem 'acts-as-taggable-on'`
+2. Generate the migration
+    `rails generate acts_as_taggable_on:migration`
+2. Run the migration
+    `rake db:migrate`
 
-Acts As Taggable On is now useable in Rails 3.0, thanks to the excellent work of Szymon Nowak
-and Jelle Vandebeeck.
-
-To use it, add it to your Gemfile:
-
-    gem 'acts-as-taggable-on'
-
-Post Installation
------------------
-
-1. `rails generate acts_as_taggable_on:migration`
-2. `rake db:migrate`
-
-
-Testing
-=======
-
-Acts As Taggable On uses RSpec for its test coverage. Inside the plugin
-directory, you can run the specs for RoR 3.0.0 with:
-
-    rake spec
-
-If you already have RSpec on your application, the specs will run while using:
-
-    rake spec:plugins
+**Done!**
 
 
 Usage
@@ -189,6 +169,19 @@ CSS:
     .css2 { font-size: 1.2em; }
     .css3 { font-size: 1.4em; }
     .css4 { font-size: 1.6em; }
+
+
+Testing
+=======
+
+Acts As Taggable On uses RSpec for its test coverage. Inside the plugin
+directory, you can run the specs for RoR 3.0.0 with:
+
+    rake spec
+
+If you already have RSpec on your application, the specs will run while using:
+
+    rake spec:plugins
 
 
 Contributors
