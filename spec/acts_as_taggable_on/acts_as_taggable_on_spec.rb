@@ -7,7 +7,6 @@ describe "Acts As Taggable On" do
 
   describe "Taggable Method Generation" do
     before(:each) do
-      clean_database!
       TaggableModel.tag_types = []
       TaggableModel.acts_as_taggable_on(:tags, :languages, :skills, :needs, :offerings)
       @taggable = TaggableModel.new(:name => "Bob Jones")
