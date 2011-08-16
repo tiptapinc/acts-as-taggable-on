@@ -86,13 +86,13 @@ module ActsAsTaggableOn::Taggable
         elsif options.delete(:any)
           conditions << tag_list.map { |t| sanitize_sql(["#{acts_as_taggable_on_tag_model.table_name}.name #{ActsAsTaggableOn.like_operator} ?", t]) }.join(" OR ")
 
-          tagging_join  = " JOIN #{ActsAsTaggableOn::Tagging.table_name}" +
-                          "   ON #{ActsAsTaggableOn::Tagging.table_name}.taggable_id = #{table_name}.#{primary_key}" +
-                          "  AND #{ActsAsTaggableOn::Tagging.table_name}.taggable_type = #{quote_value(base_class.name)}" +
-                          " JOIN #{ActsAsTaggableOn::Tag.table_name}" +
-                          "   ON #{ActsAsTaggableOn::Tagging.table_name}.tag_id = #{ActsAsTaggableOn::Tag.table_name}.id"
+          tagging_join  = " JOIN #{acts_as_taggable_on_tagging_model.table_name}" +
+                          "   ON #{acts_as_taggable_on_tagging_model.table_name}.taggable_id = #{table_name}.#{primary_key}" +
+                          "  AND #{acts_as_taggable_on_tagging_model.table_name}.taggable_type = #{quote_value(base_class.name)}" +
+                          " JOIN #{acts_as_taggable_on_tag_model.table_name}" +
+                          "   ON #{acts_as_taggable_on_tagging_model.table_name}.tag_id = #{acts_as_taggable_on_tag_model.table_name}.id"
 
-          tagging_join << "  AND " + sanitize_sql(["#{ActsAsTaggableOn::Tagging.table_name}.context = ?", context.to_s]) if context
+          tagging_join << "  AND " + sanitize_sql(["#{acts_as_taggable_on_tagging_model.table_name}.context = ?", context.to_s]) if context
           select_clause = "DISTINCT #{table_name}.*" unless context and tag_types.one?
 
           joins << tagging_join
