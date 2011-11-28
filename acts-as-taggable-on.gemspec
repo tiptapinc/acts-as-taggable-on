@@ -12,9 +12,6 @@ Gem::Specification.new do |s|
   s.date = %q{2011-03-30}
   s.description = %q{With ActsAsTaggableOn, you could tag a single model on several contexts, such as skills, interests, and awards. It also provides other advanced functionality.}
   s.email = %q{michael@intridea.com}
-  s.extra_rdoc_files = [
-    "README.rdoc"
-  ]
   s.files = [
     ".rspec",
     "CHANGELOG",
