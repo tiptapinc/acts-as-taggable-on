@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
     "CHANGELOG",
     "Gemfile",
     "MIT-LICENSE",
-    "README.rdoc",
+    "README.markdown",
     "Rakefile",
     "VERSION",
     "acts-as-taggable-on.gemspec",
