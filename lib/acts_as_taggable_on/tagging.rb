@@ -15,7 +15,7 @@ module ActsAsTaggableOn
                         :tagger_type,
                         :tagger_id
 
-        belongs_to :tag, :class_name => tag_class_name
+        belongs_to :tag, :class_name => tag_class_name, :counter_cache => true
         belongs_to :taggable, :polymorphic => true
         belongs_to :tagger,   :polymorphic => true
 
